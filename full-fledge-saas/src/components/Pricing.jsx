@@ -46,7 +46,15 @@ function CheckIcon({ className }) {
   )
 }
 
-function Plan({ name, price, description, href, features, featured = false }) {
+function Plan({
+  name,
+  price,
+  description,
+  features,
+  featured = false,
+  handleCheckout,
+  planType,
+}) {
   return (
     <section
       className={clsx(
@@ -64,7 +72,7 @@ function Plan({ name, price, description, href, features, featured = false }) {
         {description}
       </p>
       <p className="order-first font-display text-5xl font-light tracking-tight text-white">
-        {price}
+        ${price}
       </p>
       <ul
         role="list"
@@ -80,20 +88,54 @@ function Plan({ name, price, description, href, features, featured = false }) {
           </li>
         ))}
       </ul>
-      <Button
-        href={href}
-        variant={featured ? 'solid' : 'outline'}
-        color="white"
-        className="mt-8"
-        aria-label={`Get started with the ${name} plan for ${price}`}
-      >
-        Get started
-      </Button>
+      {planType === name ? (
+        <Button
+          variant={featured ? 'solid' : 'outline'}
+          color="white"
+          className="mt-8"
+          disabled
+          aria-label={`Get started with the ${name} plan for ${price}`}
+        >
+          Subscribed
+        </Button>
+      ) : (
+        <Button
+          variant={featured ? 'solid' : 'outline'}
+          color="white"
+          className="mt-8"
+          onClick={() => {
+            handleCheckout(Number(price))
+          }}
+          aria-label={`Get started with the ${name} plan for ${price}`}
+        >
+          Get Started
+        </Button>
+      )}
     </section>
   )
 }
 
-export function Pricing() {
+export function Pricing({ userName, userId, planType }) {
+  const checkOut = (plan) => {
+    fetch('http://localhost:8080/api/v1/create-subscription-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ plan: plan, customerId: userId }),
+    })
+      .then((res) => {
+        if (res.ok) return res.json()
+        console.log(res)
+        return res.json().then((json) => Promise.reject(json))
+      })
+      .then(({ session }) => {
+        window.location = session.url
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+  }
   return (
     <section
       id="pricing"
@@ -117,9 +159,10 @@ export function Pricing() {
         <div className="-mx-4 mt-16 grid max-w-2xl grid-cols-1 gap-y-10 sm:mx-auto lg:-mx-8 lg:max-w-none lg:grid-cols-3 xl:mx-0 xl:gap-x-8">
           <Plan
             name="Starter"
-            price="$9"
+            price="9"
             description="Good for anyone who is self-employed and just getting started."
-            href="/register"
+            userName={userName}
+            userId={userId}
             features={[
               'Send 10 quotes and invoices',
               'Connect up to 2 bank accounts',
@@ -127,13 +170,16 @@ export function Pricing() {
               'Manual payroll support',
               'Export up to 3 reports',
             ]}
+            planType={planType}
+            handleCheckout={checkOut}
           />
           <Plan
             featured
             name="Small business"
-            price="$15"
+            price="15"
             description="Perfect for small / medium sized businesses."
-            href="/register"
+            userName={userName}
+            userId={userId}
             features={[
               'Send 25 quotes and invoices',
               'Connect up to 5 bank accounts',
@@ -143,12 +189,16 @@ export function Pricing() {
               'Bulk reconcile transactions',
               'Track in multiple currencies',
             ]}
+            planType={planType}
+            handleCheckout={checkOut}
           />
           <Plan
             name="Enterprise"
-            price="$39"
+            price="39"
             description="For even the biggest enterprise companies."
-            href="/register"
+            userName={userName}
+            userId={userId}
+            planType={planType}
             features={[
               'Send unlimited quotes and invoices',
               'Connect up to 15 bank accounts',
@@ -156,6 +206,7 @@ export function Pricing() {
               'Automated payroll support',
               'Export up to 25 reports, including TPS',
             ]}
+            handleCheckout={checkOut}
           />
         </div>
       </Container>

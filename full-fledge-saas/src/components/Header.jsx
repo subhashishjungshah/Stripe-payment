@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { Popover, Transition } from '@headlessui/react'
 import clsx from 'clsx'
@@ -90,21 +90,7 @@ function MobileNavigation() {
   )
 }
 
-export function Header() {
-  const [userId, setUserId] = useState('')
-  const [userName, setUserName] = useState('')
-  useEffect(() => {
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        setUserId(user.uid)
-        setUserName(user.displayName)
-      } else {
-        setUserId('')
-        setUserName('')
-      }
-    })
-  }, [userId])
-
+export function Header({ userId, userName }) {
   return (
     <header className="py-10">
       <Container>
